@@ -21,20 +21,29 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $req)
-    {
-        $data = $req->validate([
-            'name'=>'required|string',
-            'sku'=>'nullable|string',
-            'category_id'=>'nullable|exists:categories,id',
-            'quantity'=>'integer',
-            'min_stock'=>'integer',
-            'price'=>'numeric',
-            'cost'=>'numeric',
-        ]);
-        $product = Product::create($data);
-        return response()->json($product,201);
+   public function store(Request $req)
+{
+    $data = $req->validate([
+        'name' => 'required|string',
+        'sku' => 'nullable|string',
+        'category_id' => 'nullable|exists:categories,id',
+        'quantity' => 'integer',
+        'min_stock' => 'integer',
+        'price' => 'numeric',
+        'cost' => 'nullable|numeric',
+        'pack_cost' => 'nullable|numeric',
+        'pack_size' => 'nullable|integer|min:1',
+    ]);
+
+    // Se for informado pack_cost, calcula custo unitário
+    if (!empty($data['pack_cost']) && !empty($data['pack_size'])) {
+        $data['cost'] = $data['pack_cost'] / $data['pack_size'];
     }
+
+    $product = Product::create($data);
+
+    return response()->json($product, 201);
+}
 
     /**
      * Display the specified resource.
@@ -48,23 +57,30 @@ class ProductController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $req, string $id)
-    {
-        $prod = Product::findOrFail($id);
-        // $prod->update($req->all());
-        $data = $req->validate([
-            'name'=>'required|string',
-            'sku'=>'nullable|string',
-            'category_id'=>'nullable|exists:categories,id',
-            'quantity'=>'integer',
-            'min_stock'=>'integer',
-            'price'=>'numeric',
-            'cost'=>'numeric',
-        ]);
+{
+    $prod = Product::findOrFail($id);
 
-        $prod->update($data);
+    $data = $req->validate([
+        'name' => 'required|string',
+        'sku' => 'nullable|string',
+        'category_id' => 'nullable|exists:categories,id',
+        'quantity' => 'integer',
+        'min_stock' => 'integer',
+        'price' => 'numeric',
+        'cost' => 'nullable|numeric',
+        'pack_cost' => 'nullable|numeric',
+        'pack_size' => 'nullable|integer|min:1',
+    ]);
 
-        return response()->json($prod);
+    // Se vier pack_cost e pack_size, recalcula custo unitário
+    if (!empty($data['pack_cost']) && !empty($data['pack_size'])) {
+        $data['cost'] = $data['pack_cost'] / $data['pack_size'];
     }
+
+    $prod->update($data);
+
+    return response()->json($prod);
+}
 
     /**
      * Remove the specified resource from storage.
