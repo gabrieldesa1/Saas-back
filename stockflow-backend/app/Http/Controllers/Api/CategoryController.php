@@ -10,11 +10,16 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        return Category::all();
+        return Category::withCount('products')->get();
     }
 
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'color' => 'nullable|string|max:255'
+        ]);
+
         return Category::create($request->all());
     }
 
@@ -25,6 +30,10 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'color' => 'nullable|string|max:255'
+        ]);
         $category->update($request->all());
         return $category;
     }
